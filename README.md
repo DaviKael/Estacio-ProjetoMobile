@@ -6,6 +6,8 @@ Esse é um projeto [Expo](https://expo.dev) criado com [`create-expo-app`](https
 
 Clone este repositório com ```git clone https://github.com/DaviKael/Estacio-ProjetoMobile```
 
+Instale Expo Go no seu dispositivo móvel através da App Store ou Google Play
+
 #### Na pasta raiz do projeto:
 
 1. Instale as dependências com:
