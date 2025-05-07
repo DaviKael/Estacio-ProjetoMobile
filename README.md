@@ -2,7 +2,11 @@
 
 Esse é um projeto [Expo](https://expo.dev) criado com [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Setup do Projeto
+## Setup
+
+Clone este repositório com ```git clone https://github.com/DaviKael/Estacio-ProjetoMobile```
+
+#### Na pasta raiz do projeto:
 
 1. Instale as dependências com:
 
@@ -29,6 +33,6 @@ No terminal, você vai achar opções para abrir o app como:
 
 Escolha como abrir e teste em seu ambiente de desenvolvimento.
 
-Você pode continuar desenvolvendo o front no diretório `app`. Esse projeto usa rotas [file-based](https://docs.expo.dev/router/introduction).
+Você pode continuar desenvolvendo o front end no diretório `app`.
 
 Ao final dos passos acima você já deve ver no app "Testando 1, 2, 3..."
