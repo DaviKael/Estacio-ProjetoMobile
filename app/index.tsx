@@ -1,15 +1,46 @@
-import { Text, View } from "react-native";
+import React, { useState } from 'react';
+import { View, Text, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 
-export default function Index() {
+export default function AtualizarScreen() {
+  const [loading, setLoading] = useState(false);
+  const [mensagem, setMensagem] = useState('');
+
+  const handleAtualizar = async () => {
+    setLoading(true);
+    setMensagem('');
+    try {
+      const response = await fetch('http://192.168.0.10:8000/atualizar'); // Substitua pelo IP da sua máquina
+      if (!response.ok) throw new Error('Erro na resposta da API');
+      const data = await response.json();
+      setMensagem(data.mensagem || 'Atualização realizada com sucesso!');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Não foi possível se conectar à API.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Testando 1, 2, 3...</Text>
+    <View style={styles.container}>
+      <Button title="Atualize-me" onPress={handleAtualizar} disabled={loading} />
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
+      {mensagem ? <Text style={styles.texto}>{mensagem}</Text> : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  texto: {
+    marginTop: 20,
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+  },
+});
