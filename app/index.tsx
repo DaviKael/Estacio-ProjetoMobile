@@ -9,7 +9,7 @@ export default function AtualizarScreen() {
     setLoading(true);
     setMensagem('');
     try {
-      const response = await fetch('http://192.168.0.10:8000/atualizar'); // Substitua pelo IP da sua máquina
+      const response = await fetch('http://127.0.0.1:8000');
       if (!response.ok) throw new Error('Erro na resposta da API');
       const data = await response.json();
       setMensagem(data.mensagem || 'Atualização realizada com sucesso!');
