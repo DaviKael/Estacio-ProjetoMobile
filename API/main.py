@@ -4,18 +4,6 @@ import requests
 
 app = FastAPI()
 
-url = (
-    'https://newsapi.org/v2/top-headlines?'
-    'country=us&'
-    'apiKey=51e20c02a1a94a058dba51999e2109be'
-)
-
-noticias = requests.get(url).json()
-
-@app.get("/")
-def home():
-    return noticias
-
 def setup_cors(app):
     origins = [
         "http://localhost.tiangolo.com",
@@ -27,6 +15,8 @@ def setup_cors(app):
         "http://127.0.0.1:8000/",
         "http://127.0.0.1:8081/",
         "http://0.0.0.0:8000",
+        "http://10.0.3.2:8000/",
+        "exp://26.27.215.135:8081",
     ]
 
     app.add_middleware(
@@ -38,3 +28,15 @@ def setup_cors(app):
     )
 
 setup_cors(app)
+
+url = (
+    'https://newsapi.org/v2/top-headlines?'
+    'country=us&'
+    'apiKey=51e20c02a1a94a058dba51999e2109be'
+)
+
+noticias = requests.get(url).json()
+
+@app.get("/")
+def home():
+    return noticias

@@ -9,7 +9,7 @@ export default function AtualizarScreen() {
     setLoading(true);
     setMensagem('');
     try {
-      const response = await fetch('http://127.0.0.1:8000');
+      const response = await fetch('http://10.0.2.2:8000');
       if (!response.ok) throw new Error('Erro na resposta da API');
       const data = await response.json();
       setMensagem(data.mensagem || 'Atualização realizada com sucesso!');
@@ -23,7 +23,7 @@ export default function AtualizarScreen() {
 
   return (
     <View style={styles.container}>
-      <Button title="Atualize-me" onPress={handleAtualizar} disabled={loading} />
+      <Button title="Atualizar" onPress={handleAtualizar} disabled={loading} />
       {loading && <ActivityIndicator style={{ marginTop: 20 }} />}
       {mensagem ? <Text style={styles.texto}>{mensagem}</Text> : null}
     </View>
