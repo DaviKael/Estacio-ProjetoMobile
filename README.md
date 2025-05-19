@@ -37,4 +37,4 @@ Escolha como abrir e teste em seu ambiente de desenvolvimento.
 
 Você pode continuar desenvolvendo o front end no diretório `app`.
 
-Ao final dos passos acima você já deve ver no app um botão escrito "Atualizar" e ao clicar nele, verá uma mensagem a ser exibida: "Atualização realizada com sucesso!"
+Ao final dos passos acima você já deve ver no app botões para pesquisar 4 categorias de notícias.
