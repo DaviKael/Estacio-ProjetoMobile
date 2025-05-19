@@ -23,7 +23,7 @@ Instale Expo Go no seu dispositivo móvel através da App Store ou Google Play
    ```
 3. Navegue para a pasta `API` e inicie o FastAPI:
    ```bash
-    fastapi dev main.py
+    fastapi run
    ```
 
 No terminal, você vai achar opções para abrir o app como:
@@ -37,4 +37,4 @@ Escolha como abrir e teste em seu ambiente de desenvolvimento.
 
 Você pode continuar desenvolvendo o front end no diretório `app`.
 
-Ao final dos passos acima você já deve ver no app "Testando 1, 2, 3..."
+Ao final dos passos acima você já deve ver no app um botão escrito "Atualizar" e ao clicar nele, verá uma mensagem a ser exibida: "Atualização realizada com sucesso!"
