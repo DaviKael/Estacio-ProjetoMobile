@@ -5,11 +5,11 @@ import {
   Text,
   ActivityIndicator,
   StyleSheet,
-  ScrollView,
+  FlatList,
 } from "react-native";
 
 export default function EsportesScreen() {
-  const [data, setData] = useState<object | null>(null);
+  const [articles, setArticles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -18,7 +18,7 @@ export default function EsportesScreen() {
       try {
         const res = await fetch("http://10.0.2.2:8000/esportes");
         const json = await res.json();
-        setData(json);
+        setArticles(json.articles);
       } catch (e) {
         setError(e as Error);
       } finally {
@@ -27,6 +27,13 @@ export default function EsportesScreen() {
     })();
   }, []);
 
+  const renderArticle = ({ item }: { item: any }) => (
+    <View style={styles.card}>
+      <Text style={styles.title}>{item.title}</Text>
+      <Text style={styles.description}>{item.description}</Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: "Esportes" }} />
@@ -34,10 +41,13 @@ export default function EsportesScreen() {
       {loading && <ActivityIndicator size="large" />}
       {error && <Text>Erro: {error.message}</Text>}
 
-      {data && (
-        <ScrollView>
-          <Text selectable>{JSON.stringify(data, null, 2)}</Text>
-        </ScrollView>
+      {!loading && !error && (
+        <FlatList
+          data={articles}
+          keyExtractor={(item, idx) => idx.toString()}
+          renderItem={renderArticle}
+          contentContainerStyle={styles.listContent}
+        />
       )}
     </View>
   );
@@ -47,5 +57,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+  listContent: {
+    paddingBottom: 16,
+  },
+  card: {
+    backgroundColor: "#f9f9f9",
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 6,
+  },
+  description: {
+    fontSize: 14,
+    color: "#555",
   },
 });

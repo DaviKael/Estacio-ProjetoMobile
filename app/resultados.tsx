@@ -1,31 +1,26 @@
-import { Stack } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { Stack, useLocalSearchParams } from "expo-router";
+import React from "react";
 import {
   View,
   Text,
-  ActivityIndicator,
-  StyleSheet,
   FlatList,
+  StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 
-export default function CienciaScreen() {
-  const [articles, setArticles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export default function ResultadosScreen() {
+  const { data, title } = useLocalSearchParams();
+  let articles: any[] = [];
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("http://10.0.2.2:8000/ciencia");
-        const json = await res.json();
-        setArticles(json.articles);
-      } catch (e) {
-        setError(e as Error);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  try {
+    articles = JSON.parse(data as string);
+  } catch {
+    return (
+      <View style={styles.container}>
+        <Text>Erro ao carregar os resultados.</Text>
+      </View>
+    );
+  }
 
   const renderArticle = ({ item }: { item: any }) => (
     <View style={styles.card}>
@@ -36,12 +31,11 @@ export default function CienciaScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: "Ciência" }} />
+      <Stack.Screen options={{ title: `Resultados: ${title}` }} />
 
-      {loading && <ActivityIndicator size="large" />}
-      {error && <Text>Erro: {error.message}</Text>}
-
-      {!loading && !error && (
+      {!articles.length ? (
+        <ActivityIndicator size="large" />
+      ) : (
         <FlatList
           data={articles}
           keyExtractor={(item, idx) => idx.toString()}
