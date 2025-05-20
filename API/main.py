@@ -6,7 +6,6 @@ import requests
 app = FastAPI()
 router = APIRouter()
 
-
 def setup_cors(app):
     origins = [
         "http://localhost",
@@ -27,39 +26,65 @@ def setup_cors(app):
         allow_headers=["*"],
     )
 
-
 setup_cors(app)
 
-indice = "country=us"
-key = "51e20c02a1a94a058dba51999e2109be"
-url = f"https://newsapi.org/v2/top-headlines?{indice}&apiKey={key}"
+url = (
+    'https://newsapi.org/v2/top-headlines?'
+    'country=us&'
+    'apiKey=51e20c02a1a94a058dba51999e2109be'
+)
 
-request = requests.get(url).json()
+noticias = requests.get(url).json()
 
+getEsportes = (
+    'https://newsapi.org/v2/top-headlines?'
+    'category=sports&'
+    'apiKey=51e20c02a1a94a058dba51999e2109be'
+)
+
+getSaude = (
+    'https://newsapi.org/v2/top-headlines?'
+    'category=health&'
+    'apiKey=51e20c02a1a94a058dba51999e2109be'
+)
+
+getCiencia = (
+    'https://newsapi.org/v2/top-headlines?'
+    'category=science&'
+    'apiKey=51e20c02a1a94a058dba51999e2109be'
+)
+
+getTecnologia = (
+    'https://newsapi.org/v2/top-headlines?'
+    'category=technology&'
+    'apiKey=51e20c02a1a94a058dba51999e2109be'
+)
+
+esportes = requests.get(getEsportes).json()
+saude = requests.get(getSaude).json()
+ciencia = requests.get(getCiencia).json()
+tecnologia = requests.get(getTecnologia).json()
 
 @app.get("/")
 def get_home():
-    return request
+    return noticias
 
+@app.get("/esportes")
+def get_esportes():
+    return esportes
 
-@router.get("/{busca}")
-def get_filtrar(busca: str):
-    if busca.lower() == "saude":
-        indice = "category=health"
+@app.get("/saude")
+def get_saude():
+    return saude
 
-    elif busca.lower() == "tecnologia":
-        indice = "category=technology"
+@app.get("/ciencia")
+def get_ciencia():
+    return ciencia
 
-    elif busca.lower() == "esportes":
-        indice = "category=sports"
+@app.get("/tecnologia")
+def get_tecnologia():
+    return tecnologia
 
-    elif busca.lower() == "ciencia":
-        indice = "category=science"
-    else:
-        indice = "q=" + busca.lower()
-    url = f"https://newsapi.org/v2/top-headlines?{indice}&apiKey={key}"
-
-    return requests.get(url).json()
-
-
-app.include_router(router)
+@router.get("/noticias")
+def get_noticias():
+    return noticias
