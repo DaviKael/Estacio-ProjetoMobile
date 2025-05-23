@@ -34,13 +34,6 @@ indice = "country=us"
 key = "51e20c02a1a94a058dba51999e2109be"
 url = f"https://newsapi.org/v2/top-headlines?{indice}&apiKey={key}"
 
-request = requests.get(url).json()
-
-
-@app.get("/")
-def get_home():
-    return request
-
 
 @router.get("/{busca}")
 def get_filtrar(busca: str):
@@ -55,10 +48,11 @@ def get_filtrar(busca: str):
 
     elif busca.lower() == "ciencia":
         indice = "category=science"
+
     else:
         indice = "q=" + busca.lower()
-    url = f"https://newsapi.org/v2/top-headlines?{indice}&apiKey={key}"
 
+    url = f"https://newsapi.org/v2/top-headlines?{indice}&apiKey={key}"
     return requests.get(url).json()
 
 
