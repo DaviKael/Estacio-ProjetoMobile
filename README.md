@@ -1,12 +1,19 @@
 # 👋
 
-Esse é um projeto [Expo](https://expo.dev) criado com [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Esse é um projeto [Expo](https://expo.dev) de um app de notícias em tempo real.
+
+## Requisitos:
+[Python](https://www.python.org/downloads/)
+
+[Node.js](https://nodejs.org/pt/download)
+
+[Expo Go](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=pt_BR&pli=1)
+
+[Android SDK](https://developer.android.com/?hl=pt-br)
 
 ## Setup
 
 Clone este repositório com ```git clone https://github.com/DaviKael/Estacio-ProjetoMobile```
-
-Instale Expo Go no seu dispositivo móvel através da App Store ou Google Play
 
 #### Na pasta raiz do projeto:
 
@@ -21,12 +28,29 @@ Instale Expo Go no seu dispositivo móvel através da App Store ou Google Play
    ```bash
     npx expo start
    ```
-3. Navegue para a pasta `API` e inicie o FastAPI:
+
+3. Crie um novo terminal e navegue para a pasta `API` e instale o fastapi:
+   ```bash
+    pip install "fastapi[standard]"
+   ```
+
+3. Ainda na pasta `API`, instale requests:
+   ```bash
+    pip install requests
+   ```
+
+3. Rode o fastapi com o comando
    ```bash
     fastapi run
    ```
 
-No terminal, você vai achar opções para abrir o app como:
+   se preferir em modo de desenvolvedor (ou caso tenha algum problema ao rodar ```fastapi run```)
+    ```bash
+    fastapi dev main.py
+   ```
+<br>
+
+No terminal em que você iniciou o expo, você vai achar opções para abrir o app como:
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
