@@ -29,17 +29,12 @@ Clone este repositório com ```git clone https://github.com/DaviKael/Estacio-Pro
     npx expo start
    ```
 
-3. Crie um novo terminal e navegue para a pasta `API` e instale o fastapi:
+3. Crie um novo terminal e navegue para a pasta `API` e instale as dependencias:
    ```bash
-    pip install "fastapi[standard]"
+    pip install -r requirements.txt
    ```
 
-3. Ainda na pasta `API`, instale requests:
-   ```bash
-    pip install requests
-   ```
-
-3. Rode o fastapi com o comando
+4. Rode o fastapi com o comando
    ```bash
     fastapi run
    ```
