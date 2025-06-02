@@ -1,54 +1,45 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
   Alert,
   FlatList,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-
-type Category = {
-  title: string;
-  color: string;
-  route: string;
-};
-
-const categories: Category[] = [
-  { title: 'ESPORTES',   color: '#1E88E5', route: '/esportes'   },
-  { title: 'CIÊNCIA',    color: '#43A047', route: '/ciencia'    },
-  { title: 'SAÚDE',      color: '#E53935', route: '/saude'      },
-  { title: 'TECNOLOGIA', color: '#8E24AA', route: '/tecnologia' },
-];
+import { categories } from '@/app/utils/categories';
 
 export default function IndexScreen() {
   const [query, setQuery] = useState('');
-  const router            = useRouter();
+  const [searching, setSearching] = useState(false);
+  const router = useRouter();
 
   const handleSearch = async () => {
     const trimmed = query.trim();
     if (!trimmed) {
-      Alert.alert('Erro', 'Digite algo para buscar.');
+      Alert.alert('Busca vazia', 'Digite algo para buscar.');
       return;
     }
-
+    setSearching(true);
+    Keyboard.dismiss();
     try {
-      const res  = await fetch(`http://10.0.2.2:8000/${trimmed}`);
+      const res  = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/${trimmed}`);
       const json = await res.json();
-
       router.push({
         pathname: '/resultados',
         params: {
           data : JSON.stringify(json.articles || []),
-          termo: trimmed,
+          title: trimmed,
         },
       });
     } catch (err) {
-      console.error(err);
       Alert.alert('Erro', 'Falha ao buscar dados.');
+    } finally {
+      setSearching(false);
     }
   };
 
@@ -56,39 +47,35 @@ export default function IndexScreen() {
     router.push(route as any);
   };
 
-  const renderCategory = ({ item }: { item: Category }) => (
+  const renderCategory = ({ item }: { item: typeof categories[0] }) => (
     <TouchableOpacity
       style={[styles.card, { borderColor: item.color }]}
       onPress={() => handleCategoryPress(item.route)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      <Ionicons name="newspaper-outline" size={34} color={item.color} />
-      <Text style={[styles.cardText, { color: item.color }]}>
-        {item.title}
-      </Text>
+      <Ionicons name={item.icon as any} size={32} color={item.color} style={{ marginBottom: 8 }} />
+      <Text style={[styles.cardText, { color: item.color }]}>{item.title}</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.subTitle}>NewsAPI</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Buscar categoria ou palavra-chave..."
-        value={query}
-        onChangeText={setQuery}
-        onSubmitEditing={handleSearch}
-      />
-
-      <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-        <Text style={styles.searchButtonText}>BUSCAR</Text>
-      </TouchableOpacity>
-
-      {/* Espaçamento entre o botão BUSCAR e o grid de categorias.
-         Ajuste o height conforme desejar. */}
-      <View style={{ height: 30 }} />
-
+      <Text style={styles.title}>NewsAPI</Text>
+      <Text style={styles.subtitle}>Atualize-se com as principais manchetes do Brasil e do mundo</Text>
+      <View style={styles.searchBox}>
+        <TextInput
+          style={styles.input}
+          placeholder="Buscar por palavra-chave ou tema..."
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={handleSearch}
+          returnKeyType="search"
+          placeholderTextColor="#888"
+        />
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch} disabled={searching}>
+          <Ionicons name="search" size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={categories}
         keyExtractor={(item) => item.route}
@@ -97,6 +84,7 @@ export default function IndexScreen() {
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.gridContainer}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={<Text style={styles.sectionTitle}>Categorias</Text>}
       />
     </View>
   );
@@ -105,59 +93,87 @@ export default function IndexScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 100,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: '#F7F8FA',
+    paddingHorizontal: 18,
+    paddingTop: 60,
   },
-  subTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#222',
     textAlign: 'center',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 28,
+    fontWeight: '400',
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginBottom: 24,
+    paddingHorizontal: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
   },
   input: {
-    width: '100%',
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginBottom: 10,
+    flex: 1,
+    height: 44,
+    fontSize: 16,
+    color: '#222',
+    backgroundColor: 'transparent',
   },
   searchButton: {
-    backgroundColor: '#1E88E5',
-    paddingVertical: 12,
+    backgroundColor: '#222',
     borderRadius: 8,
+    padding: 8,
+    marginLeft: 6,
     alignItems: 'center',
-    elevation: 3,
+    justifyContent: 'center',
   },
-  searchButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 16,
+    marginTop: 8,
+    textAlign: 'left',
   },
-  /* ---------- GRID DAS CATEGORIAS ---------- */
   gridContainer: {
     paddingBottom: 16,
   },
   row: {
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   card: {
     width: '47%',
     aspectRatio: 1,
     backgroundColor: '#fff',
-    borderWidth: 2,
-    borderRadius: 12,
+    borderWidth: 1.5,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 2,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    marginBottom: 0,
   },
   cardText: {
-    marginTop: 10,
-    fontWeight: 'bold',
+    marginTop: 2,
+    fontWeight: '600',
     fontSize: 15,
+    letterSpacing: 0.2,
   },
 });
