@@ -4,7 +4,6 @@ function useNewsService() {
     throw new Error("API URL is not defined");
   }
 
-  // Agora aceita page e pageSize como parâmetros opcionais
   const getNews = async (category: string, page: number = 1, pageSize: number = 10) => {
     try {
       const url = `${API_URL}/${category}?page=${page}&pageSize=${pageSize}`;
@@ -26,4 +25,3 @@ function useNewsService() {
 }
 
 export { useNewsService };
-

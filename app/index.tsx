@@ -1,179 +1,243 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import {
-  Alert,
-  FlatList,
-  Keyboard,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { categories } from '@/app/utils/categories';
+"use client"
+
+import { useCallback, useEffect, useState } from "react"
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native"
+import { useNewsService } from "./api/services"
+import CategoryTabs from "./components/CategoryTabs"
+import FilterModal from "./components/FilterModal"
+import NewsCard from "./components/NewsCard"
+import SearchHeader from "./components/SearchHeader"
+import type { Article, Category, NewsFilter } from "./types/types"
+import FavoritesSheet from "./components/FavoritesSheet"
+import NewsStats from "./components/NewsStats"
+import QuickActions from "./components/QuickActions"
+import TrendingTopics from "./components/TrendingTopics"
 
 export default function IndexScreen() {
-  const [query, setQuery] = useState('');
-  const [searching, setSearching] = useState(false);
-  const router = useRouter();
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showFilters, setShowFilters] = useState(false)
+  const [filters, setFilters] = useState<NewsFilter>({})
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [showFavorites, setShowFavorites] = useState(false)
+  const [favoriteArticles, setFavoriteArticles] = useState<Article[]>([])
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
 
-  const handleSearch = async () => {
-    const trimmed = query.trim();
-    if (!trimmed) {
-      Alert.alert('Busca vazia', 'Digite algo para buscar.');
-      return;
+  const { getNews } = useNewsService()
+
+  const fetchNews = useCallback(
+    async (reset = false) => {
+      if (loading && !reset) return
+
+      setLoading(true)
+      try {
+        const query = searchQuery || (selectedCategory === "all" ? "brasil" : selectedCategory)
+        const currentPage = reset ? 1 : page
+
+        const response = await getNews(query, currentPage, 20)
+        const newArticles = response.articles || []
+
+        if (reset) {
+          setArticles(newArticles)
+          setPage(2)
+        } else {
+          setArticles((prev) => [...prev, ...newArticles])
+          setPage((prev) => prev + 1)
+        }
+
+        setHasMore(newArticles.length === 20)
+        setLastUpdate(new Date())
+      } catch (error) {
+        console.error("Error fetching news:", error)
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    },
+    [getNews, searchQuery, selectedCategory, page, loading],
+  )
+
+  useEffect(() => {
+    setPage(1)
+    setHasMore(true)
+    fetchNews(true)
+  }, [selectedCategory, searchQuery])
+
+  const handleCategorySelect = (category: Category) => {
+    setSelectedCategory(category.id)
+    setSearchQuery("")
+  }
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    setSelectedCategory("all")
+  }
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    setPage(1)
+    setHasMore(true)
+    fetchNews(true)
+  }
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      fetchNews(false)
     }
-    setSearching(true);
-    Keyboard.dismiss();
-    try {
-      const res  = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/${trimmed}`);
-      const json = await res.json();
-      router.push({
-        pathname: '/resultados',
-        params: {
-          data : JSON.stringify(json.articles || []),
-          title: trimmed,
-        },
-      });
-    } catch (err) {
-      Alert.alert('Erro', 'Falha ao buscar dados.');
-    } finally {
-      setSearching(false);
+  }
+
+  const handleFavorite = (article: Article) => {
+    const articleId = article.url
+    const newFavorites = new Set(favorites)
+    let newFavoriteArticles = [...favoriteArticles]
+
+    if (favorites.has(articleId)) {
+      newFavorites.delete(articleId)
+      newFavoriteArticles = favoriteArticles.filter((fav) => fav.url !== articleId)
+    } else {
+      newFavorites.add(articleId)
+      newFavoriteArticles.push(article)
     }
-  };
 
-  const handleCategoryPress = (route: string) => {
-    router.push(route as any);
-  };
+    setFavorites(newFavorites)
+    setFavoriteArticles(newFavoriteArticles)
+  }
 
-  const renderCategory = ({ item }: { item: typeof categories[0] }) => (
-    <TouchableOpacity
-      style={[styles.card, { borderColor: item.color }]}
-      onPress={() => handleCategoryPress(item.route)}
-      activeOpacity={0.8}
-    >
-      <Ionicons name={item.icon as any} size={32} color={item.color} style={{ marginBottom: 8 }} />
-      <Text style={[styles.cardText, { color: item.color }]}>{item.title}</Text>
-    </TouchableOpacity>
-  );
+  const renderArticle = ({ item }: { item: Article }) => (
+    <NewsCard article={item} onFavorite={handleFavorite} isFavorite={favorites.has(item.url)} />
+  )
+
+  const handleQuickAction = (query: string) => {
+    setSearchQuery(query)
+    setSelectedCategory("all")
+  }
+
+  const renderHeader = () => (
+    <>
+      <SearchHeader
+        onSearch={handleSearch}
+        onFilterPress={() => setShowFilters(true)}
+        onFavoritesPress={() => setShowFavorites(true)}
+        favoritesCount={favoriteArticles.length}
+      />
+      <NewsStats totalArticles={articles.length} lastUpdate={lastUpdate} />
+      <CategoryTabs selectedCategory={selectedCategory} onCategorySelect={handleCategorySelect} />
+      <TrendingTopics onTopicPress={handleQuickAction} />
+      <QuickActions onActionPress={handleQuickAction} />
+    </>
+  )
+
+  const renderFooter = () => {
+    if (!loading || articles.length === 0) return null
+
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="small" color="#1E88E5" />
+        <Text style={styles.footerText}>Carregando mais notícias...</Text>
+      </View>
+    )
+  }
+
+  const renderEmpty = () => {
+    if (loading) return null
+
+    return (
+      <View style={styles.empty}>
+        <Text style={styles.emptyText}>
+          {searchQuery ? `Nenhuma notícia encontrada para "${searchQuery}"` : "Nenhuma notícia disponível no momento"}
+        </Text>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>NewsAPI</Text>
-      <Text style={styles.subtitle}>Atualize-se com as principais manchetes do Brasil e do mundo</Text>
-      <View style={styles.searchBox}>
-        <TextInput
-          style={styles.input}
-          placeholder="Buscar por palavra-chave ou tema..."
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={handleSearch}
-          returnKeyType="search"
-          placeholderTextColor="#888"
-        />
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch} disabled={searching}>
-          <Ionicons name="search" size={22} color="#fff" />
-        </TouchableOpacity>
-      </View>
       <FlatList
-        data={categories}
-        keyExtractor={(item) => item.route}
-        renderItem={renderCategory}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.gridContainer}
+        data={articles}
+        renderItem={renderArticle}
+        keyExtractor={(item, index) => `${item.url}-${index}`}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmpty}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={["#1E88E5"]} />}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={<Text style={styles.sectionTitle}>Categorias</Text>}
+        contentContainerStyle={articles.length === 0 ? styles.emptyContainer : undefined}
+      />
+
+      <FilterModal
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApply={setFilters}
+        currentFilters={filters}
+      />
+
+      {loading && articles.length === 0 && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#1E88E5" />
+          <Text style={styles.loadingText}>Carregando notícias...</Text>
+        </View>
+      )}
+
+      <FavoritesSheet
+        visible={showFavorites}
+        onClose={() => setShowFavorites(false)}
+        favorites={favoriteArticles}
+        onRemoveFavorite={handleFavorite}
       />
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F8FA',
-    paddingHorizontal: 18,
-    paddingTop: 60,
+    backgroundColor: "#f8f9fa",
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#222',
-    textAlign: 'center',
-    marginBottom: 4,
-    letterSpacing: 0.5,
+  emptyContainer: {
+    flexGrow: 1,
   },
-  subtitle: {
-    fontSize: 15,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 28,
-    fontWeight: '400',
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginBottom: 24,
-    paddingHorizontal: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  input: {
+  empty: {
     flex: 1,
-    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  emptyText: {
     fontSize: 16,
-    color: '#222',
-    backgroundColor: 'transparent',
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 24,
   },
-  searchButton: {
-    backgroundColor: '#222',
-    borderRadius: 8,
-    padding: 8,
-    marginLeft: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
+  footer: {
+    padding: 16,
+    alignItems: "center",
+    gap: 8,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#222',
-    marginBottom: 16,
-    marginTop: 8,
-    textAlign: 'left',
+  footerText: {
+    fontSize: 14,
+    color: "#666",
   },
-  gridContainer: {
-    paddingBottom: 16,
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(248, 249, 250, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
   },
-  row: {
-    justifyContent: 'space-between',
-    marginBottom: 18,
+  loadingText: {
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "500",
   },
-  card: {
-    width: '47%',
-    aspectRatio: 1,
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    marginBottom: 0,
-  },
-  cardText: {
-    marginTop: 2,
-    fontWeight: '600',
-    fontSize: 15,
-    letterSpacing: 0.2,
-  },
-});
+})
